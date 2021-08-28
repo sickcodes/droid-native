@@ -205,10 +205,12 @@ sudo mount -o rw    /var/lib/lxc/anbox/anbox_x86_64_vendor.img  /var/lib/lxc/anb
 sudo mount -o bind  /var/lib/lxc/anbox/anbox.prop               /var/lib/lxc/anbox/rootfs/vendor/anbox.prop
 
 # warning, this will extract overwriting /etc/system/... so make sure you're in /tmp
-cd /var/lib/lxc/anbox \
+cd /var/lib/lxc/anbox/rootfs \
     && sudo wget https://github.com/sickcodes/dock-droid/raw/master/native-bridge.tar.gz \
     && sudo tar -xzvf native-bridge.tar.gz \
+    && sudo rm native-bridge.tar.gz \
     && sudo cp /var/lib/lxc/anbox/nativebridge.rc /var/lib/lxc/anbox/rootfs/vendor/etc/init/nativebridge.rc
+    && sudo rm /var/lib/lxc/anbox/nativebridge.rc
 
 
 export DISPLAY=:1
