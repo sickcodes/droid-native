@@ -18,6 +18,50 @@ Credits for native_bridge install via Redroid [https://github.com/zhouziyang](@z
 [https://github.com/remote-android/redroid-doc/tree/master/native_bridge](https://github.com/remote-android/redroid-doc/tree/master/native_bridge)
 
 
+# Arch Linux Install Bleeding Edge Kernel
+
+
+```bash
+KERNEL_MAINLINE="$(curl https://www.kernel.org \
+        | grep -Po '(?<=https\:\/\/git\.kernel\.org\/torvalds\/t\/linux\-)(.+?)(?=\.tar\.gz)')"
+
+RC="${KERNEL_MAINLINE//\-/}"
+cd ~
+sudo pacman -Rns linux-git --noconfirm
+yay linux-git --getpkgbuild --force
+cd ~/linux-git
+
+
+# remove html docs
+sed -i -e 's/\"\$pkgbase-docs\"//' PKGBUILD
+sed -i -e 's/rm\ -r\ \"\$builddir\/Documentation\"//' PKGBUILD
+sed -i -e 's/make\ htmldocs//' PKGBUILD
+# sed -i -e 's/make\ /make\ -j'${N}'\ /g' PKGBUILD
+sed -i -e 's/^pkgver\=.*/pkgver\='${RC}'/' PKGBUILD
+sed -i -e 's/^pkgver\=.*/pkgver\='${RC}'/' PKGBUILD
+
+# MANUALLY EDIT OUT THE SKIP SHASUMS TO SKIP
+
+sed -i -e s/^sha256sums/old_sha256sums/g PKGBUILD
+
+perl -i -p -e s/old_sha256sums/sha256sums\=\(\'SKIP\'\ \'SKIP\'\)\\nold_sha256sums/g PKGBUILD
+
+zcat /proc/config.gz  > config
+
+tee -a config <<EOF
+CONFIG_ASHMEM=y
+CONFIG_ANDROID=y
+CONFIG_ANDROID_BINDER_IPC=y
+CONFIG_ANDROID_BINDERFS=y
+CONFIG_ANDROID_BINDER_DEVICES="binder,hwbinder,vndbinder"
+CONFIG_SW_SYNC=y
+CONFIG_UHID=m
+EOF
+
+makepkg -si --noconfirm
+
+```
+
 # Wipe existing WayDroid/Lineage/Bliss Data # Droid-Native
 
 ```bash
