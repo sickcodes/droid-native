@@ -254,6 +254,8 @@ wayfire &
 sudo mount -o rw    /var/lib/lxc/anbox/anbox_x86_64_system.img  /var/lib/lxc/anbox/rootfs
 sudo mount -o rw    /var/lib/lxc/anbox/anbox_x86_64_vendor.img  /var/lib/lxc/anbox/rootfs/vendor
 sudo mount -o bind  /var/lib/lxc/anbox/anbox.prop               /var/lib/lxc/anbox/rootfs/vendor/anbox.prop
+sudo mkdir /dev/binderfs
+sudo mount -t binder binder /dev/binderfs
 
 # warning, this will extract overwriting /etc/system/... so make sure you're in /tmp
 cd /var/lib/lxc/anbox/rootfs \
@@ -262,7 +264,7 @@ cd /var/lib/lxc/anbox/rootfs \
     && sudo rm native-bridge.tar.gz \
     && sudo cp /var/lib/lxc/anbox/nativebridge.rc /var/lib/lxc/anbox/rootfs/vendor/etc/init/nativebridge.rc \
     && sudo rm /var/lib/lxc/anbox/nativebridge.rc \
-    && cd -
+    && cd ..
 ```
 
 # libndk native bridge installation lineageos waydroid anbox halium
@@ -390,11 +392,15 @@ sudo lxc-start -n anbox -F -- /init
 
 tee -a ~/start-waydroid.sh <<EOF
 #!/bin/bash
-bash /var/lib/lxc/anbox/bootstrap.sh
-ip link add name anbox0 type bridge
-ip link set dev anbox0 up
-dhcpd -4 -q -cf /etc/dhcpd.anbox.conf --no-pid anbox0
-DISPLAY=:1 lxc-start -n anbox -F -- /init
+sudo mkdir -p /dev/binderfs
+sudo mount -t binder binder /dev/binderfs
+sudo systemctl enable --now systemd-networkd.service
+sudo systemctl restart lxc lxc-net lxcfs lxc-auto
+sudo bash /var/lib/lxc/anbox/bootstrap.sh
+sudo ip link add name anbox0 type bridge
+sudo ip link set dev anbox0 up
+sudo dhcpd -4 -q -cf /etc/dhcpd.anbox.conf --no-pid anbox0
+sudo DISPLAY=:1 lxc-start -n anbox -F -- /init
 EOF
 
 sudo DISPLAY=:1 bash ~/start-waydroid.sh
