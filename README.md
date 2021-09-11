@@ -112,6 +112,7 @@ WAYLAND_DISPLAY=wayland-1
 BRIDGE=lxcbr0
 DATA_FOLDER=/var/lib/lxc/anbox/data
 IMAGE_ZIP_URL="https://build.lolinet.com/file/lineage/anbox_x86_64/latest-raw-images.zip"
+# IMAGE_ZIP_URL="https://build.lolinet.com/file/lineage/anbox_arm64/latest-raw-images.zip"
 # IMAGE_ZIP_URL="${IMAGE_ZIP_URL:="file:///home/${USER}/images.zip"}"
 DOWNLOAD=true
 # DOWNLOAD=
