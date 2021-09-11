@@ -37,12 +37,18 @@ Credits for native_bridge install via Redroid [https://github.com/zhouziyang](@z
 [https://github.com/waydroid/waydroid](https://github.com/waydroid/waydroid)
 
 
+
 # Arch Linux Install Bleeding Edge Kernel
 
 
 ```bash
-KERNEL_MAINLINE="$(curl https://www.kernel.org \
-        | grep -Po '(?<=https\:\/\/git\.kernel\.org\/torvalds\/t\/linux\-)(.+?)(?=\.tar\.gz)')"
+# KERNEL_MAINLINE="$(curl https://www.kernel.org \
+#         | grep -Po '(?<=https\:\/\/git\.kernel\.org\/torvalds\/\w\/linux\-)(.+?)(?=\.tar\.xz)')"
+
+KERNEL_MAINLINE="$(curl https://www.kernel.org/feeds/kdist.xml \
+    | grep -m1 -Po '(?<=kernel.org,stable,)(.+?)(?=,20\d\d\-)')"
+
+echo "${KERNEL_MAINLINE}"
 
 RC="${KERNEL_MAINLINE//\-/}"
 cd ~
@@ -99,7 +105,8 @@ sudo systemctl enable --now systemd-networkd.service
 sudo systemctl restart lxc lxc-net lxcfs lxc-auto
 
 sudo su
-
+sudo mkdir -p /dev/binderfs
+sudo mount -t binder binder /dev/binderfs
 HEIGHT=720
 WIDTH=405
 # HEIGHT=1440
@@ -274,7 +281,7 @@ wayfire &
 sudo mount -o rw    /var/lib/lxc/anbox/anbox_x86_64_system.img  /var/lib/lxc/anbox/rootfs
 sudo mount -o rw    /var/lib/lxc/anbox/anbox_x86_64_vendor.img  /var/lib/lxc/anbox/rootfs/vendor
 sudo mount -o bind  /var/lib/lxc/anbox/anbox.prop               /var/lib/lxc/anbox/rootfs/vendor/anbox.prop
-sudo mkdir /dev/binderfs
+sudo mkdir -p /dev/binderfs
 sudo mount -t binder binder /dev/binderfs
 
 # warning, this will extract overwriting /etc/system/... so make sure you're in /tmp
