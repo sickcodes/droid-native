@@ -118,9 +118,14 @@ WAYLAND_DISPLAY=wayland-1
 # BRIDGE=anbox0
 BRIDGE=lxcbr0
 DATA_FOLDER=/var/lib/lxc/anbox/data
-IMAGE_ZIP_URL="https://build.lolinet.com/file/lineage/anbox_x86_64/latest-raw-images.zip"
+IMAGE_ZIP_URL="https://build.lolinet.com/file/lineage/waydroid_x86_64/latest-raw-images.zip"
 # IMAGE_ZIP_URL="https://build.lolinet.com/file/lineage/anbox_arm64/latest-raw-images.zip"
+# IMAGE_ZIP_URL="https://build.lolinet.com/file/lineage/anbox_x86_64/lineage-17.1-20210523-1509-anbox_x86_64-521.zip"
 # IMAGE_ZIP_URL="${IMAGE_ZIP_URL:="file:///home/${USER}/images.zip"}"
+
+EXTRACTED_SYSTEM_IMG=waydroid_x86_64_system.img
+EXTRACTED_VENDOR_IMG=waydroid_x86_64_vendor.img
+
 DOWNLOAD=true
 # DOWNLOAD=
 # WIPE_EXISTING=
@@ -269,7 +274,10 @@ if [[ "${DOWNLOAD}" ]]; then
     DOWNLOAD_FILE_NAME="$(basename "${IMAGE_ZIP_URL}")"
     sudo wget -O "${DOWNLOAD_FILE_NAME}" "${IMAGE_ZIP_URL}"
     sudo unzip ${DOWNLOAD_FILE_NAME}
+    # simg2img system.img "${EXTRACTED_SYSTEM_IMG}"
+    # simg2img vendor.img "${EXTRACTED_VENDOR_IMG}"
 fi
+
 ```
 
 ### Run script
@@ -278,9 +286,9 @@ Run the Android image natively:
 
 ```bash
 wayfire &
-sudo mount -o rw    /var/lib/lxc/anbox/anbox_x86_64_system.img  /var/lib/lxc/anbox/rootfs
-sudo mount -o rw    /var/lib/lxc/anbox/anbox_x86_64_vendor.img  /var/lib/lxc/anbox/rootfs/vendor
-sudo mount -o bind  /var/lib/lxc/anbox/anbox.prop               /var/lib/lxc/anbox/rootfs/vendor/anbox.prop
+sudo mount -o rw    "/var/lib/lxc/anbox/${EXTRACTED_SYSTEM_IMG}"  /var/lib/lxc/anbox/rootfs
+sudo mount -o rw    "/var/lib/lxc/anbox/${EXTRACTED_VENDOR_IMG}"  /var/lib/lxc/anbox/rootfs/vendor
+sudo mount -o bind  /var/lib/lxc/anbox/anbox.prop                 /var/lib/lxc/anbox/rootfs/vendor/waydroid.prop
 sudo mkdir -p /dev/binderfs
 sudo mount -t binder binder /dev/binderfs
 
