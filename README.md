@@ -169,18 +169,6 @@ persist.waydroid.invert_colors=true
 EOF
 
 
-# setprop gralloc.gbm.device /dev/dri/renderD128
-sudo tee /var/lib/lxc/anbox/nativebridge.rc <<EOF
-on early-init
-    setprop ro.product.cpu.abilist x86_64,arm64-v8a,x86,armeabi-v7a,armeabi
-    setprop ro.product.cpu.abilist64 x86_64,arm64-v8a
-    setprop ro.product.cpu.abilist32 x86,armeabi-v7a,armeabi
-    setprop ro.dalvik.vm.isa.arm x86
-    setprop ro.dalvik.vm.isa.arm64 x86_64
-    setprop ro.enable.native.bridge.exec 1
-    setprop ro.dalvik.vm.native.bridge libndk_translation.so
-    setprop ro.ndk_translation.version 0.2.2
-EOF
 
 
 # far too permissive
@@ -298,7 +286,14 @@ sudo mount -o bind  /var/lib/lxc/anbox/anbox.prop                "${BIND_PROP}"
 sudo mkdir -p /dev/binderfs
 sudo mount -t binder binder /dev/binderfs
 
-# warning, this will extract overwriting /etc/system/... so make sure you're in /tmp
+
+```
+
+# libndk native bridge installation lineageos waydroid anbox halium
+
+```bash
+
+# warning, this will extract overwriting /etc/system/... so make sure you're in /var/lib/lxc/anbox/rootfs
 cd /var/lib/lxc/anbox/rootfs \
     && sudo wget https://github.com/sickcodes/dock-droid/raw/master/native-bridge.tar.gz \
     && sudo tar -xzvf native-bridge.tar.gz \
@@ -306,11 +301,20 @@ cd /var/lib/lxc/anbox/rootfs \
     && sudo cp /var/lib/lxc/anbox/nativebridge.rc /var/lib/lxc/anbox/rootfs/vendor/etc/init/nativebridge.rc \
     && sudo rm /var/lib/lxc/anbox/nativebridge.rc \
     && cd ..
-```
 
-# libndk native bridge installation lineageos waydroid anbox halium
+# setprop gralloc.gbm.device /dev/dri/renderD128
+sudo tee /var/lib/lxc/anbox/nativebridge.rc <<EOF
+on early-init
+    setprop ro.product.cpu.abilist x86_64,arm64-v8a,x86,armeabi-v7a,armeabi
+    setprop ro.product.cpu.abilist64 x86_64,arm64-v8a
+    setprop ro.product.cpu.abilist32 x86,armeabi-v7a,armeabi
+    setprop ro.dalvik.vm.isa.arm x86
+    setprop ro.dalvik.vm.isa.arm64 x86_64
+    setprop ro.enable.native.bridge.exec 1
+    setprop ro.dalvik.vm.native.bridge libndk_translation.so
+    setprop ro.ndk_translation.version 0.2.2
+EOF
 
-```bash
 sudo sed -i -e 's/native.bridge=0/native.bridge=1/' /var/lib/lxc/anbox/rootfs/system/etc/prop.default rootfs/vendor/odm/etc/build.prop
 
 sudo sed -i -e "s/x86_64,x86/x86_64,arm64-v8a,x86,armeabi-v7a,armeabi/g" \
