@@ -105,6 +105,10 @@ sudo systemctl enable --now systemd-networkd.service
 sudo systemctl restart lxc lxc-net lxcfs lxc-auto
 
 sudo su
+
+sudo modprobe binder_linux
+sudo modprobe ashmem_linux
+
 sudo mkdir -p /dev/binderfs
 sudo mount -t binder binder /dev/binderfs
 HEIGHT=720
@@ -125,6 +129,7 @@ IMAGE_ZIP_URL="https://build.lolinet.com/file/lineage/waydroid_x86_64/latest-raw
 
 EXTRACTED_SYSTEM_IMG=waydroid_x86_64_system.img
 EXTRACTED_VENDOR_IMG=waydroid_x86_64_vendor.img
+BIND_PROP=/var/lib/lxc/anbox/rootfs/vendor/waydroid.prop
 
 DOWNLOAD=true
 # DOWNLOAD=
@@ -160,10 +165,11 @@ anbox.stub_sensors_hal=1
 #anbox.use_subsurface=false
 persist.anbox.multi_windows=false
 anbox.active_apps=full
+persist.waydroid.invert_colors=true
 EOF
 
 
-    # setprop gralloc.gbm.device /dev/dri/renderD128
+# setprop gralloc.gbm.device /dev/dri/renderD128
 sudo tee /var/lib/lxc/anbox/nativebridge.rc <<EOF
 on early-init
     setprop ro.product.cpu.abilist x86_64,arm64-v8a,x86,armeabi-v7a,armeabi
@@ -181,8 +187,8 @@ EOF
 
 sudo tee /var/lib/lxc/anbox/bootstrap.sh <<EOF
 #!/bin/sh
-sudo modprobe binder
-sudo modprobe ashmem
+sudo modprobe binder_linux
+sudo modprobe ashmem_linux
 export XDG_RUNTIME_DIR=/run/user/1000
 export XDG_SESSION_TYPE=wayland
 export WAYLAND_DISPLAY=wayland-1
@@ -288,7 +294,7 @@ Run the Android image natively:
 wayfire &
 sudo mount -o rw    "/var/lib/lxc/anbox/${EXTRACTED_SYSTEM_IMG}"  /var/lib/lxc/anbox/rootfs
 sudo mount -o rw    "/var/lib/lxc/anbox/${EXTRACTED_VENDOR_IMG}"  /var/lib/lxc/anbox/rootfs/vendor
-sudo mount -o bind  /var/lib/lxc/anbox/anbox.prop                 /var/lib/lxc/anbox/rootfs/vendor/waydroid.prop
+sudo mount -o bind  /var/lib/lxc/anbox/anbox.prop                "${BIND_PROP}"
 sudo mkdir -p /dev/binderfs
 sudo mount -t binder binder /dev/binderfs
 
@@ -305,7 +311,7 @@ cd /var/lib/lxc/anbox/rootfs \
 # libndk native bridge installation lineageos waydroid anbox halium
 
 ```bash
-sudo sed -i -e 's/native.bridge=0/native.bridge=1/' /var/lib/lxc/anbox/rootfs/system/etc/prop.default
+sudo sed -i -e 's/native.bridge=0/native.bridge=1/' /var/lib/lxc/anbox/rootfs/system/etc/prop.default rootfs/vendor/odm/etc/build.prop
 
 sudo sed -i -e "s/x86_64,x86/x86_64,arm64-v8a,x86,armeabi-v7a,armeabi/g" \
     /var/lib/lxc/anbox/rootfs/system/build.prop \
@@ -424,12 +430,16 @@ sudo lxc-start -n anbox -F -- /init
 ```
 
 ```bash
+wayfire
+```
 
+```bash
 tee -a ~/start-waydroid.sh <<EOF
 #!/bin/bash
 sudo mkdir -p /dev/binderfs
 sudo mount -t binder binder /dev/binderfs
 sudo systemctl enable --now systemd-networkd.service
+sudo killall dnsmasq
 sudo systemctl restart lxc lxc-net lxcfs lxc-auto
 sudo bash /var/lib/lxc/anbox/bootstrap.sh
 sudo ip link add name anbox0 type bridge
@@ -451,8 +461,15 @@ If `DISPLAY=:1` does not work, open a terminal in wayfire and `echo ${DISPLAY}` 
 ### Stop or Destory Container anbox container after use
 
 ```bash
+sudo umount "${BIND_PROP}"
+sudo umount /var/lib/lxc/anbox/rootfs/vendor
+sudo umount /var/lib/lxc/anbox/rootfs
+```
+
+```bash
 # umount the devices in this important order
-sudo umount /var/lib/lxc/anbox/rootfs/vendor/anbox.prop
+sudo umount /var/lib/lxc/anbox/rootfs/vendor/anbox.prop \
+    || sudo umount /var/lib/lxc/anbox/rootfs/vendor/waydroid.prop
 sudo umount /var/lib/lxc/anbox/rootfs/vendor
 sudo umount /var/lib/lxc/anbox/rootfs
 sudo lxc-destroy anbox
